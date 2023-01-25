@@ -6,9 +6,10 @@ The models were [converted into h5 files](https://github.com/nyoki-mtl/keras-fac
 
 After converting the face images into 512 dimensional embeddings, [DBSCAN algorithm](https://en.wikipedia.org/wiki/DBSCAN) with an epsilon value of 0.5 and [cosine similarity](https://en.wikipedia.org/wiki/Cosine_similarity) as a metric is used to differentiate faces.
 
-* Test results for FaceNet model trained on [CASIA WebFace dataset](http://www.cbsr.ia.ac.cn/english/casia-webFace/casia-webfAce_AgreEmeNtS.pdf):
-
-  ![](assets/casia.png)
 * Test results for FaceNet model trained on [VGGFace2 dataset](https://www.robots.ox.ac.uk/~vgg/data/vgg_face2/):
 
   ![](assets/vgg.png)
+
+* Test results for FaceNet model trained on [CASIA WebFace dataset](http://www.cbsr.ia.ac.cn/english/casia-webFace/casia-webfAce_AgreEmeNtS.pdf):
+
+  ![](assets/casia.png)
