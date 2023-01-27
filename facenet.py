@@ -38,7 +38,11 @@ class FaceNet():
         outputs = []
         if isinstance(self.model,  tf.keras.Model):
             outputs = self.model.predict(image)
+            # tensorflow creates outputs of shape (1, 512)
+            outputs = outputs[0]
         elif isinstance(self.model, rt.capi.onnxruntime_inference_collection.InferenceSession):
             image = image.astype(np.float32)
             outputs = self.model.run([], {self.input_name : image})
-        return outputs[0]
+            # onnxruntime creates outputs of shape (1, 1, 512)
+            outputs = outputs[0][0]
+        return outputs
