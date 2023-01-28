@@ -1,11 +1,9 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-import tensorflow as tf
 import numpy as np
-from scipy import spatial
 from sklearn.cluster import DBSCAN
 from matplotlib import pyplot as plt
 from detector import Detector
+from facenet import FaceNet
 import cv2
 
 # function to save plotted figures
@@ -24,19 +22,11 @@ def plot_figure(dictionary, model_name, save=False):
             plt.axis('off')
             count+=1
     if save:
-        plt.savefig('assets/'+ model_name +'.png')
+        file_dir = 'assets/'+ model_name +'.png'
+        print('Saving ' + model_name.upper() + ' dataset results at ' + file_dir)
+        plt.savefig(file_dir)
     else:
         plt.show()
-
-# normalize images
-def prewhiten(image_array):
-    axis = (0, 1, 2)
-    size = image_array.size
-    mean = np.mean(image_array, axis=axis, keepdims=True)
-    std = np.std(image_array, axis=axis, keepdims=True)
-    std_adj = np.maximum(std, 1.0/np.sqrt(size))
-    y = (image_array - mean) / std_adj
-    return y
 
 def create_dictionary(faces_features, face_boxes):
     # creating dictionary for easier plotting
@@ -50,19 +40,14 @@ def create_dictionary(faces_features, face_boxes):
     print(len(dictionary), "unique faces found.")
     return dictionary
 
-def predict(faces, model_name):
-    model = tf.keras.models.load_model(model_name)
-    face_boxes_resized = faces.copy()
+def predict(faces, model_name, backend):
     outputs = []
-    for face in face_boxes_resized:
+    model = FaceNet(model_name, 1/255.0, (160, 160), backend)
+    for face in faces:
         print('Bounding box shape :', face.shape)
-        face = cv2.resize(face, (160, 160))
-        face = face.reshape(1, 160, 160, 3)
-        face = prewhiten(face)
-        print('Bounding box shape resized :', face.shape)
-        output = model.predict(face)
-        print('Output shape :', output[0].shape)
-        outputs.append(output[0])
+        output = model.generate_embeddings(face)
+        print('Output shape :', output.shape)
+        outputs.append(output)
     return outputs
 
 # need cudnn and CUDA toolkit installed for cuda as ONNXRuntime backend
@@ -76,8 +61,12 @@ for image_location in os.listdir('test_images'):
     faces = [image[y:y+h,x:x+w] for x, y, w, h in boxes]
     face_boxes.extend(faces)
 
-face_embeddings_casia = predict(face_boxes, 'FaceNet_CASIA_WebFace/FaceNet_CASIA_WebFace.h5')
-face_embeddings_vgg = predict(face_boxes, 'FaceNet_VGGFace2/FaceNet_VGGFace2.h5')
+# set backend from 'tf', 'cuda' and 'onnx'
+backend = 'cuda'
+model_casia = 'FaceNet_CASIA_WebFace/FaceNet_CASIA_WebFace.onnx'
+model_vgg = 'FaceNet_VGGFace2/FaceNet_VGGFace2.onnx'
+face_embeddings_casia = predict(face_boxes, model_casia, backend)
+face_embeddings_vgg = predict(face_boxes, model_vgg, backend)
 
 # using DBSCAN on face embeddings
 model = DBSCAN(eps=0.5, metric='cosine', min_samples=1)
